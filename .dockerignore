@@ -1,0 +1,39 @@
+# VCS + CI
+.git
+.gitignore
+.github
+.circleci
+
+# Build output
+.next
+out
+*.tsbuildinfo
+
+# Deps (rebuilt inside the image)
+node_modules
+
+# Runtime data (mounted as a volume at runtime)
+data
+
+# Env
+.env
+.env.local
+.env*.local
+
+# Logs / OS / editor
+*.log
+.DS_Store
+Thumbs.db
+.idea
+.vscode
+
+# Docs / meta (not needed at runtime)
+README.md
+PROJECT_OVERVIEW.md
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Misc
+coverage
+.nyc_output

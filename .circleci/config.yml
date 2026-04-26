@@ -1,0 +1,153 @@
+version: 2.1
+
+# Pipeline parameters let you re-tag a build manually from the UI.
+parameters:
+  manual_tag:
+    type: string
+    default: ""
+
+# ---- Reusable values ---------------------------------------------------------
+# Required env vars (set in CircleCI project settings, context "dockerhub"):
+#   DOCKERHUB_USERNAME   - Docker Hub user / org (e.g. deanopen)
+#   DOCKERHUB_TOKEN      - Docker Hub access token (NOT your password)
+#   DOCKERHUB_REPO       - full repo, defaults to deanopen/barber-ai
+# ---- ------------------------------------------------------------------------
+
+executors:
+  node:
+    docker:
+      - image: cimg/node:20.18
+    resource_class: medium
+    working_directory: ~/app
+
+  docker-builder:
+    docker:
+      - image: cimg/base:2024.05
+    resource_class: medium
+    working_directory: ~/app
+
+commands:
+  install_deps:
+    steps:
+      - restore_cache:
+          keys:
+            - v1-yarn-{{ checksum "yarn.lock" }}
+            - v1-yarn-
+      - run:
+          name: Enable Corepack
+          command: corepack enable
+      - run:
+          name: Install dependencies
+          command: yarn install --immutable
+      - save_cache:
+          key: v1-yarn-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.yarn
+            - .yarn/cache
+            - node_modules
+
+jobs:
+  lint_and_build:
+    executor: node
+    steps:
+      - checkout
+      - install_deps
+      - run:
+          name: Type check + lint
+          command: |
+            yarn typecheck
+            yarn lint || true
+      - run:
+          name: Next build (verifies standalone output)
+          command: NEXT_TELEMETRY_DISABLED=1 yarn build
+      - persist_to_workspace:
+          root: ~/app
+          paths:
+            - .
+
+  docker_build_push:
+    executor: docker-builder
+    steps:
+      - attach_workspace:
+          at: ~/app
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Compute image tags
+          command: |
+            set -eu
+            DOCKERHUB_REPO="${DOCKERHUB_REPO:-deanopen/barber-ai}"
+            export DOCKERHUB_REPO
+            echo "Publishing to repo: $DOCKERHUB_REPO"
+            echo "export DOCKERHUB_REPO=\"$DOCKERHUB_REPO\"" >> "$BASH_ENV"
+
+            SHORT_SHA="${CIRCLE_SHA1:0:7}"
+            BRANCH="${CIRCLE_BRANCH:-unknown}"
+            TAG_FROM_GIT="${CIRCLE_TAG:-}"
+            MANUAL="<< pipeline.parameters.manual_tag >>"
+
+            TAGS=("$DOCKERHUB_REPO:sha-$SHORT_SHA")
+
+            if [ -n "$TAG_FROM_GIT" ]; then
+              TAGS+=("$DOCKERHUB_REPO:$TAG_FROM_GIT" "$DOCKERHUB_REPO:latest")
+            elif [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+              TAGS+=("$DOCKERHUB_REPO:latest")
+            else
+              SAFE_BRANCH=$(echo "$BRANCH" | tr '/' '-' | tr -cd 'a-zA-Z0-9._-')
+              TAGS+=("$DOCKERHUB_REPO:branch-$SAFE_BRANCH")
+            fi
+
+            if [ -n "$MANUAL" ]; then
+              TAGS+=("$DOCKERHUB_REPO:$MANUAL")
+            fi
+
+            printf '%s\n' "${TAGS[@]}" > /tmp/image-tags
+            echo "Will publish:"
+            cat /tmp/image-tags
+      - run:
+          name: Docker login
+          command: |
+            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+      - run:
+          name: Build image
+          command: |
+            set -eu
+            PRIMARY=$(head -n1 /tmp/image-tags)
+            BUILD_ARGS=(-f Dockerfile -t "$PRIMARY" .)
+            while IFS= read -r tag; do
+              [ "$tag" = "$PRIMARY" ] && continue
+              BUILD_ARGS+=(-t "$tag")
+            done < /tmp/image-tags
+            docker build "${BUILD_ARGS[@]}"
+      - run:
+          name: Push tags
+          command: |
+            set -eu
+            while IFS= read -r tag; do
+              echo "Pushing $tag"
+              docker push "$tag"
+            done < /tmp/image-tags
+      - run:
+          name: Logout
+          command: docker logout
+          when: always
+
+workflows:
+  build-and-publish:
+    jobs:
+      - lint_and_build:
+          filters:
+            tags:
+              only: /.*/
+      - docker_build_push:
+          requires:
+            - lint_and_build
+          context:
+            - dockerhub
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only:
+                - main
+                - master

@@ -1,0 +1,28 @@
+import Link from "next/link";
+
+export default function NotFound() {
+  return (
+    <div style={{ padding: "80px 24px", textAlign: "center", color: "#f5f5f5" }}>
+      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
+        Page not found
+      </h1>
+      <p style={{ color: "#a1a1aa", marginBottom: 24 }}>
+        That page must have walked out without a haircut.
+      </p>
+      <Link
+        href="/"
+        style={{
+          display: "inline-block",
+          background: "#d4a24c",
+          color: "#000",
+          padding: "10px 18px",
+          borderRadius: 10,
+          fontWeight: 600,
+          textDecoration: "none",
+        }}
+      >
+        Back to the chair
+      </Link>
+    </div>
+  );
+}

@@ -1,0 +1,51 @@
+# Barber Studio - kiosk preview station.
+#
+# Quick start (shop / kiosk mode - server holds the OpenAI key):
+#   cp .env.local.example .env
+#   docker compose up -d
+#   open http://localhost:3000
+#
+# Pull a specific build instead of :latest by setting BARBER_IMAGE_TAG:
+#   BARBER_IMAGE_TAG=sha-abc1234 docker compose up -d
+#
+# PUBLIC_SHOWCASE mode (fully client-side, bring-your-own-key demo) - set
+# NEXT_PUBLIC_SHOWCASE=1 in .env *and rebuild* the image. Public-showcase
+# builds never read or write /app/data, so the volume below is unused but
+# harmless to leave in place.
+services:
+  barber:
+    image: deanopen/barber-ai:${BARBER_IMAGE_TAG:-latest}
+    container_name: barber-ai
+    restart: unless-stopped
+    ports:
+      - "${BARBER_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Optional. The shop owner can also paste an API key in /admin and it
+      # will be persisted into data/settings.json. This var only seeds the
+      # default if no key has been saved yet. Ignored when running a
+      # PUBLIC_SHOWCASE build.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Initial admin password used the first time data/settings.json is
+      # generated. After that, change it from /admin. Ignored in showcase mode.
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me}
+      # Mirrors the build-time NEXT_PUBLIC_SHOWCASE flag at runtime so the
+      # server route handlers (and not just the client bundle) can short-
+      # circuit admin / generate endpoints. Must match what the image was
+      # built with - flipping this at runtime alone will not change the
+      # client bundle, which has the value inlined.
+      NEXT_PUBLIC_SHOWCASE: ${NEXT_PUBLIC_SHOWCASE:-}
+    volumes:
+      # Persists settings.json plus any in-flight job state (shop mode).
+      # In showcase mode nothing is written here.
+      - barber-data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/status"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+volumes:
+  barber-data:
