@@ -47,7 +47,7 @@ const L = (file: string) => `/style-references/${file}`;
 
 export const PUBLIC_DEFAULTS: PublicSettings = {
   model: "gpt-image-2",
-  mode: "individual",
+  mode: "grid",
   imageCount: 4,
   size: "1024x1024",
   quality: "high",

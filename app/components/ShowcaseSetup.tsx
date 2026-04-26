@@ -87,7 +87,7 @@ function mergeConfig(p: Partial<ClientByokConfig>): ClientByokConfig {
       p.quality === "medium" || p.quality === "high"
         ? p.quality
         : SHOWCASE_DEFAULT_CONFIG.quality,
-    mode: p.mode === "grid" ? "grid" : "individual",
+    mode: p.mode === "individual" ? "individual" : "grid",
     watermark: {
       enabled: typeof wm.enabled === "boolean" ? wm.enabled : false,
       text: typeof wm.text === "string" && wm.text.trim() ? wm.text : SHOWCASE_DEFAULT_CONFIG.watermark.text,

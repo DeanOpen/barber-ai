@@ -87,7 +87,7 @@ export async function getSettings(): Promise<Settings> {
     prompts?: { man?: unknown; woman?: unknown; kid?: unknown };
   };
   const mode: GenerationMode =
-    parsed.mode === "grid" || parsed.mode === "individual" ? parsed.mode : "individual";
+    parsed.mode === "grid" || parsed.mode === "individual" ? parsed.mode : "grid";
   const wmRaw = (parsed as Partial<Settings>).watermark as Partial<Watermark> | undefined;
   const watermark: Watermark = {
     enabled: typeof wmRaw?.enabled === "boolean" ? wmRaw.enabled : DEFAULTS.watermark.enabled,
