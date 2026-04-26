@@ -42,6 +42,9 @@ coverage/
 .claude/
 CLAUDE.local.md
 
+# Launch / marketing drafts (kept local)
+PRODUCT_HUNT*
+
 # Yarn 4
 .yarn/*
 !.yarn/patches

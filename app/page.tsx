@@ -121,7 +121,7 @@ const CUSTOMERS_KEY = "barber.customers.v2";
 // looking at the BYOK key the user has stored locally.
 const SHOWCASE_BASE_STATUS: Status = {
   configured: false,
-  mode: "individual",
+  mode: "grid",
   imageCount: PUBLIC_DEFAULTS.imageCount,
   categoryImages: PUBLIC_DEFAULTS.categoryImages,
   prompts: PUBLIC_DEFAULTS.prompts,
