@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Typecheck & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Avoid network noise; lockfile is the source of truth.
+      YARN_ENABLE_TELEMETRY: "0"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Yarn 4 ships via Corepack. The packageManager field in package.json
+      # pins the version, so this is reproducible across runs.
+      - name: Enable Corepack (Yarn 4)
+        run: |
+          corepack enable
+          corepack prepare --activate
+          yarn --version
+
+      - name: Cache Yarn artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/install-state.gz
+            ~/.yarn/berry/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ hashFiles('app/**', 'lib/**', 'public/**', 'next.config.ts') }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
+            next-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Typecheck
+        run: yarn typecheck
+
+      # Validate the kiosk (default) build. Skips the OpenNext/Cloudflare
+      # step on purpose — that path needs Cloudflare creds and is exercised
+      # by the deploy workflow, not CI.
+      - name: Build (kiosk mode)
+        run: yarn build:next
+
+      # Validate the public showcase build. Both modes must stay green.
+      - name: Build (showcase mode)
+        run: yarn build:showcase
+
+  docker:
+    name: Docker image smoke build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # No push — this just confirms the Dockerfile still builds end-to-end.
+      - name: Build kiosk image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: false
+          tags: barber-ai:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build showcase image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: false
+          tags: barber-ai:ci-showcase
+          build-args: |
+            NEXT_PUBLIC_SHOWCASE=1
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

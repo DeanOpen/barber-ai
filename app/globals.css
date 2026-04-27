@@ -372,7 +372,53 @@ body {
   }
 }
 
-/* Step 3 hairstyle picker card */
+/* Step 2 hairstyle picker */
+.style-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 18px;
+}
+.style-search .ant-input-affix-wrapper {
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border);
+  color: var(--fg);
+}
+.style-search .ant-input,
+.style-search .ant-input::placeholder,
+.style-search .ant-input-prefix {
+  color: inherit;
+}
+.style-search .ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.42);
+}
+.style-search-count {
+  white-space: nowrap;
+  font-size: 13px;
+}
+.style-search-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 92px;
+  padding: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+@media (max-width: 640px) {
+  .style-search,
+  .style-search-empty {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .style-search .ant-input-affix-wrapper {
+    max-width: none;
+  }
+}
+
 .style-card {
   position: relative;
   display: block;

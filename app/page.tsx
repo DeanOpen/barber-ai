@@ -15,6 +15,7 @@ import {
   ReloadOutlined,
   SafetyOutlined,
   ScissorOutlined,
+  SearchOutlined,
   SettingOutlined,
   UserOutlined,
   WarningFilled,
@@ -26,6 +27,7 @@ import {
   Card,
   Col,
   Image,
+  Input,
   Progress,
   Row,
   Space,
@@ -149,6 +151,10 @@ function slugify(s: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function normalizeSearchText(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 function newCustomerId() {
@@ -1236,6 +1242,7 @@ function StepStyles({
   onToggle: (name: string) => void;
 }) {
   const [brokenStyleImages, setBrokenStyleImages] = useState<Record<string, true>>({});
+  const [styleSearch, setStyleSearch] = useState("");
 
   if (styleOptions.length === 0) {
     return (
@@ -1254,8 +1261,17 @@ function StepStyles({
     );
   }
 
+  const searchText = normalizeSearchText(styleSearch);
+  const filteredStyles = searchText
+    ? styleOptions.filter((s) =>
+        [s.name, s.description, s.section ?? ""].some((value) =>
+          normalizeSearchText(value).includes(searchText),
+        ),
+      )
+    : styleOptions;
+
   const groups = new Map<string, Hairstyle[]>();
-  for (const s of styleOptions) {
+  for (const s of filteredStyles) {
     const key = s.section?.trim() || "Other";
     const list = groups.get(key) ?? [];
     list.push(s);
@@ -1276,80 +1292,103 @@ function StepStyles({
           {customer.selected.length} selected
         </Tag>
       </Paragraph>
+      <div className="style-search">
+        <Input
+          size="large"
+          allowClear
+          prefix={<SearchOutlined />}
+          placeholder="Search styles"
+          aria-label="Search hairstyles"
+          value={styleSearch}
+          onChange={(e) => setStyleSearch(e.target.value)}
+        />
+        <Text type="secondary" className="style-search-count">
+          {filteredStyles.length}/{styleOptions.length} styles
+        </Text>
+      </div>
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
-        {Array.from(groups.entries()).map(([section, items]) => (
-          <div key={section}>
-            <Title
-              level={5}
-              style={{
-                margin: "0 0 10px",
-                textTransform: "uppercase",
-                letterSpacing: 1,
-                color: "rgba(255,255,255,0.55)",
-                fontWeight: 600,
-                fontSize: 12,
-              }}
-            >
-              {section}
-            </Title>
-            <Row gutter={[12, 12]}>
-              {items.map((s) => {
-                const isOn = customer.selected.includes(s.name);
-                const initial = s.name.charAt(0).toUpperCase();
-                const styleImageKey = `${customer.gender ?? "unknown"}:${s.name}`;
-                const showStyleImage = Boolean(s.imageUrl) && !brokenStyleImages[styleImageKey];
-                return (
-                  <Col xs={12} sm={8} md={6} key={s.name}>
-                    <button
-                      type="button"
-                      onClick={() => onToggle(s.name)}
-                      aria-pressed={isOn}
-                      className={`style-card ${isOn ? "is-selected" : ""}`}
-                    >
-                      <div className="style-card-media">
-                        {showStyleImage ? (
-                          <>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={s.imageUrl}
-                              alt={s.name}
-                              loading="lazy"
-                              onError={() =>
-                                setBrokenStyleImages((prev) =>
-                                  prev[styleImageKey]
-                                    ? prev
-                                    : { ...prev, [styleImageKey]: true },
-                                )
-                              }
-                            />
-                          </>
-                        ) : (
-                          <div className="style-card-placeholder" aria-hidden>
-                            <span className="style-card-placeholder-icon">
-                              <ScissorOutlined />
-                            </span>
-                            <span className="style-card-placeholder-letter">{initial}</span>
-                          </div>
-                        )}
-                        <div className="style-card-shade" />
-                        <span
-                          className={`style-card-check ${isOn ? "is-on" : ""}`}
-                          aria-hidden
-                        >
-                          {isOn ? <CheckCircleFilled /> : null}
-                        </span>
-                      </div>
-                      <div className="style-card-body">
-                        <div className="style-card-title">{s.name}</div>
-                        <div className="style-card-desc">{s.description}</div>
-                      </div>
-                    </button>
-                  </Col>
-                );
-              })}
-            </Row>
+        {filteredStyles.length === 0 ? (
+          <div className="style-search-empty">
+            <Text>No hairstyle matches &quot;{styleSearch.trim()}&quot;.</Text>
+            <Button size="small" onClick={() => setStyleSearch("")}>
+              Clear search
+            </Button>
           </div>
-        ))}
+        ) : (
+          Array.from(groups.entries()).map(([section, items]) => (
+            <div key={section}>
+              <Title
+                level={5}
+                style={{
+                  margin: "0 0 10px",
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
+                  color: "rgba(255,255,255,0.55)",
+                  fontWeight: 600,
+                  fontSize: 12,
+                }}
+              >
+                {section}
+              </Title>
+              <Row gutter={[12, 12]}>
+                {items.map((s) => {
+                  const isOn = customer.selected.includes(s.name);
+                  const initial = s.name.charAt(0).toUpperCase();
+                  const styleImageKey = `${customer.gender ?? "unknown"}:${s.name}`;
+                  const showStyleImage = Boolean(s.imageUrl) && !brokenStyleImages[styleImageKey];
+                  return (
+                    <Col xs={12} sm={8} md={6} key={s.name}>
+                      <button
+                        type="button"
+                        onClick={() => onToggle(s.name)}
+                        aria-pressed={isOn}
+                        className={`style-card ${isOn ? "is-selected" : ""}`}
+                      >
+                        <div className="style-card-media">
+                          {showStyleImage ? (
+                            <>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={s.imageUrl}
+                                alt={s.name}
+                                loading="lazy"
+                                onError={() =>
+                                  setBrokenStyleImages((prev) =>
+                                    prev[styleImageKey]
+                                      ? prev
+                                      : { ...prev, [styleImageKey]: true },
+                                  )
+                                }
+                              />
+                            </>
+                          ) : (
+                            <div className="style-card-placeholder" aria-hidden>
+                              <span className="style-card-placeholder-icon">
+                                <ScissorOutlined />
+                              </span>
+                              <span className="style-card-placeholder-letter">{initial}</span>
+                            </div>
+                          )}
+                          <div className="style-card-shade" />
+                          <span
+                            className={`style-card-check ${isOn ? "is-on" : ""}`}
+                            aria-hidden
+                          >
+                            {isOn ? <CheckCircleFilled /> : null}
+                          </span>
+                        </div>
+                        <div className="style-card-body">
+                          <div className="style-card-title">{s.name}</div>
+                          <div className="style-card-desc">{s.description}</div>
+                        </div>
+                      </button>
+                    </Col>
+                  );
+                })}
+              </Row>
+            </div>
+          ))
+        )}
       </Space>
     </section>
   );
