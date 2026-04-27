@@ -5,9 +5,10 @@ import ThemeProvider from "./theme";
 import ThemeToggle from "./components/ThemeToggle";
 import { IS_SHOWCASE } from "@/lib/showcase";
 
-// Runs before React hydrates so the first paint matches the saved (or system)
-// theme — prevents a dark/light flash.
-const THEME_BOOT = `(function(){try{var k='barber-theme';var v=localStorage.getItem(k);var m=(v==='light'||v==='dark')?v:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');var d=document.documentElement;d.dataset.theme=m;d.style.colorScheme=m;}catch(e){}})();`;
+// Runs before React hydrates so the first paint matches the saved theme —
+// prevents a dark/light flash. Default is light; "system" honors the OS only
+// when the visitor explicitly opted in via the toggle.
+const THEME_BOOT = `(function(){try{var k='barber-theme';var v=localStorage.getItem(k);var m='light';if(v==='light'||v==='dark'){m=v;}else if(v==='system'){m=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}var d=document.documentElement;d.dataset.theme=m;d.style.colorScheme=m;}catch(e){}})();`;
 
 const SITE_TITLE = IS_SHOWCASE
   ? "Barber Studio - Public Demo"
@@ -34,7 +35,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      data-theme="light"
+      style={{ colorScheme: "light" }}
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       </head>
@@ -92,8 +98,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   alt="Barber Studio - Try the haircut - An in-shop AI hairstyle preview for barbers and salons. | Product Hunt"
-                  width={250}
-                  height={54}
+                  width={140}
+                  height={30}
+                  style={{ display: "block", height: 30, width: "auto" }}
                   src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1132893&theme=light&t=1777256507518"
                 />
               </a>

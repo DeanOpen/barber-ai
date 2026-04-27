@@ -1,53 +1,8 @@
 @import "tailwindcss";
 
 /* ---------- Cool Barber palette ----------
-   Default = dark. data-theme="light" flips the same tokens. */
+   Default = light. data-theme="dark" flips the same tokens. */
 :root,
-:root[data-theme="dark"] {
-  --bg: #0f1418;
-  --fg: #e6ebf0;
-  --muted: #8a96a3;
-  --accent: #2f7fbf;
-  --accent-2: #1f5f95;
-  --signal: #c2433d;
-  --cream: #e8d9b8;
-  --card: #161c22;
-  --card-2: #1c242c;
-  --border: #2a3540;
-
-  --accent-tint-faint:  rgba(47, 127, 191, 0.08);
-  --accent-tint-soft:   rgba(47, 127, 191, 0.16);
-  --accent-tint:        rgba(47, 127, 191, 0.30);
-  --accent-tint-strong: rgba(47, 127, 191, 0.55);
-
-  --surface-tint:        rgba(255, 255, 255, 0.04);
-  --surface-tint-strong: rgba(255, 255, 255, 0.08);
-  --surface-tint-faint:  rgba(255, 255, 255, 0.02);
-
-  --header-bg: rgba(15, 20, 24, 0.78);
-  --shadow-strong: rgba(0, 0, 0, 0.55);
-  --shadow-soft:   rgba(0, 0, 0, 0.35);
-
-  --placeholder-bg: linear-gradient(135deg, #1a242d 0%, #0e1418 100%);
-  --photo-bg:       linear-gradient(135deg, #232b34, #131820);
-  --slideshow-bg:   rgba(10, 14, 18, 0.97);
-  --camera-bg: #000;
-
-  --on-accent: #f7fbff;
-  --placeholder-letter-color: rgba(232, 217, 184, 0.85);
-  --placeholder-icon-color:   rgba(255, 255, 255, 0.45);
-  --face-guide-color: rgba(255, 255, 255, 0.55);
-  --face-guide-shade: rgba(0, 0, 0, 0.35);
-  --camera-loading-color: rgba(255, 255, 255, 0.7);
-  --camera-close-bg: rgba(0, 0, 0, 0.5);
-  --camera-close-border: rgba(255, 255, 255, 0.2);
-  --camera-close-bg-hover: rgba(0, 0, 0, 0.7);
-  --check-bg: rgba(0, 0, 0, 0.55);
-  --search-placeholder: rgba(255, 255, 255, 0.42);
-  --empty-border: rgba(255, 255, 255, 0.18);
-  --empty-bg:     rgba(255, 255, 255, 0.025);
-}
-
 :root[data-theme="light"] {
   --bg: #f2efe8;
   --fg: #16202a;
@@ -91,6 +46,51 @@
   --search-placeholder: rgba(22, 32, 42, 0.42);
   --empty-border: rgba(22, 32, 42, 0.18);
   --empty-bg:     rgba(22, 32, 42, 0.025);
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f1418;
+  --fg: #e6ebf0;
+  --muted: #8a96a3;
+  --accent: #2f7fbf;
+  --accent-2: #1f5f95;
+  --signal: #c2433d;
+  --cream: #e8d9b8;
+  --card: #161c22;
+  --card-2: #1c242c;
+  --border: #2a3540;
+
+  --accent-tint-faint:  rgba(47, 127, 191, 0.08);
+  --accent-tint-soft:   rgba(47, 127, 191, 0.16);
+  --accent-tint:        rgba(47, 127, 191, 0.30);
+  --accent-tint-strong: rgba(47, 127, 191, 0.55);
+
+  --surface-tint:        rgba(255, 255, 255, 0.04);
+  --surface-tint-strong: rgba(255, 255, 255, 0.08);
+  --surface-tint-faint:  rgba(255, 255, 255, 0.02);
+
+  --header-bg: rgba(15, 20, 24, 0.78);
+  --shadow-strong: rgba(0, 0, 0, 0.55);
+  --shadow-soft:   rgba(0, 0, 0, 0.35);
+
+  --placeholder-bg: linear-gradient(135deg, #1a242d 0%, #0e1418 100%);
+  --photo-bg:       linear-gradient(135deg, #232b34, #131820);
+  --slideshow-bg:   rgba(10, 14, 18, 0.97);
+  --camera-bg: #000;
+
+  --on-accent: #f7fbff;
+  --placeholder-letter-color: rgba(232, 217, 184, 0.85);
+  --placeholder-icon-color:   rgba(255, 255, 255, 0.45);
+  --face-guide-color: rgba(255, 255, 255, 0.55);
+  --face-guide-shade: rgba(0, 0, 0, 0.35);
+  --camera-loading-color: rgba(255, 255, 255, 0.7);
+  --camera-close-bg: rgba(0, 0, 0, 0.5);
+  --camera-close-border: rgba(255, 255, 255, 0.2);
+  --camera-close-bg-hover: rgba(0, 0, 0, 0.7);
+  --check-bg: rgba(0, 0, 0, 0.55);
+  --search-placeholder: rgba(255, 255, 255, 0.42);
+  --empty-border: rgba(255, 255, 255, 0.18);
+  --empty-bg:     rgba(255, 255, 255, 0.025);
 }
 
 html, body {
@@ -215,6 +215,43 @@ body {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+/* AntD Alert with an action keeps the action button on the right via flex,
+   which on mobile squeezed the message into a one-word-per-line column.
+   Stack the action below the content on narrow viewports. */
+@media (max-width: 600px) {
+  .ant-alert.ant-alert-with-description {
+    flex-wrap: wrap;
+  }
+  .ant-alert.ant-alert-with-description .ant-alert-content {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .ant-alert.ant-alert-with-description .ant-alert-action {
+    flex: 1 1 100%;
+    margin: 12px 0 0 0;
+    padding-left: 0;
+  }
+  .ant-alert.ant-alert-with-description .ant-alert-action .ant-space,
+  .ant-alert.ant-alert-with-description .ant-alert-action .ant-space-item,
+  .ant-alert.ant-alert-with-description .ant-alert-action .ant-btn {
+    width: 100%;
+  }
+  /* Header: drop the BYOK label on mobile so the brand + theme toggle sit
+     on one tidy row. The toggle alone is enough signal. */
+  .shop-header .brand-sub {
+    display: none;
+  }
+  .shop-header .brand-name {
+    font-size: 15px;
+  }
+  .shop-header [aria-label^="Bring your own key"] {
+    display: none;
+  }
+  .shop-header .mx-auto {
+    padding: 8px 14px !important;
+  }
+}
+
 .theme-toggle svg {
   width: 16px;
   height: 16px;
@@ -384,6 +421,38 @@ body {
   background: var(--photo-bg);
   overflow: hidden;
 }
+@media (max-width: 600px) {
+  /* On mobile we render gender + style cards 2-up, so use a square media
+     and tighter typography to keep the wizard compact. */
+  .photo-card-media { aspect-ratio: 1 / 1; }
+  .photo-card-body { padding: 8px 10px; }
+  .photo-card-title { font-size: 13px; }
+  .photo-card-sub { font-size: 11px; }
+  .photo-card-fallback { font-size: 44px; }
+  .photo-card-check {
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    font-size: 18px;
+  }
+  .style-card-body { padding: 8px 10px 10px; }
+  .style-card-title { font-size: 13px; }
+  .style-card-desc {
+    font-size: 11.5px;
+    -webkit-line-clamp: 2;
+  }
+  .style-card-check {
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    font-size: 18px;
+  }
+  .style-card-placeholder-letter {
+    font-size: clamp(40px, 16vw, 64px);
+  }
+}
 .photo-card-media img {
   width: 100%;
   height: 100%;
@@ -436,45 +505,124 @@ body {
   border-bottom: 1px solid var(--border);
   padding-bottom: 0;
 }
-.customer-bar .ant-tabs-nav { margin: 0; }
-.customer-bar .ant-tabs-nav::before { display: none; }
-.customer-bar .ant-tabs-tab {
-  background: var(--surface-tint-faint) !important;
-  border: 1px solid var(--border) !important;
-  border-bottom: none !important;
-  border-radius: 12px 12px 0 0 !important;
-  padding: 8px 14px !important;
-  margin-right: 6px !important;
-  transition: background 0.15s ease, border-color 0.15s ease;
+.customer-bar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 6px;
+  padding-bottom: 0;
 }
-@media (hover: hover) and (pointer: fine) {
-  .customer-bar .ant-tabs-tab:hover {
-    background: var(--accent-tint-faint) !important;
-    border-color: var(--accent-tint) !important;
-  }
+.customer-tab {
+  display: inline-flex;
+  align-items: stretch;
+  background: var(--surface-tint-faint);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
-.customer-bar .ant-tabs-tab-active {
-  background: var(--card-2) !important;
-  border-color: var(--accent-tint-strong) !important;
+.customer-tab.is-active {
+  background: var(--card-2);
+  border-color: var(--accent-tint-strong);
   box-shadow: 0 -2px 0 0 var(--accent) inset;
 }
-.customer-bar .ant-tabs-tab-active .ant-tabs-tab-btn {
-  color: var(--fg) !important;
-}
-.customer-bar .ant-tabs-nav-add {
-  background: var(--accent-tint-faint) !important;
-  border: 1px dashed var(--accent-tint) !important;
-  border-radius: 12px !important;
-  color: var(--accent) !important;
-  margin-left: 8px !important;
-  padding: 0 14px !important;
+.customer-tab-main {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.customer-tab.is-active .customer-tab-main {
+  color: var(--fg);
+}
+.customer-tab-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 10px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.customer-tab-close:hover { color: var(--fg); }
+.customer-tab-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-tint-faint);
+  border: 1px dashed var(--accent-tint);
+  border-radius: 12px;
+  color: var(--accent);
+  padding: 0 14px;
+  height: 36px;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 @media (hover: hover) and (pointer: fine) {
-  .customer-bar .ant-tabs-nav-add:hover {
-    background: var(--accent-tint-soft) !important;
-    border-color: var(--accent-tint-strong) !important;
+  .customer-tab:hover {
+    background: var(--accent-tint-faint);
+    border-color: var(--accent-tint);
   }
+  .customer-tab-add:hover {
+    background: var(--accent-tint-soft);
+    border-color: var(--accent-tint-strong);
+  }
+}
+@media (max-width: 600px) {
+  .customer-tab-main { padding: 6px 10px; font-size: 13px; }
+  .customer-tab-add { padding: 0 10px; height: 32px; font-size: 13px; }
+}
+.customer-tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.customer-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1;
+  border: 1px solid var(--border);
+  background: var(--surface-tint-faint);
+  color: var(--muted);
+}
+.customer-tab-badge[data-empty="true"] {
+  visibility: hidden;
+}
+.customer-tab-badge.tone-info {
+  background: var(--accent-tint-faint);
+  border-color: var(--accent-tint);
+  color: var(--accent);
+}
+.customer-tab-badge.tone-ok {
+  background: rgba(46, 160, 67, 0.16);
+  border-color: rgba(46, 160, 67, 0.4);
+  color: rgb(126, 211, 134);
+}
+.customer-tab-badge.tone-warn {
+  background: rgba(220, 142, 50, 0.16);
+  border-color: rgba(220, 142, 50, 0.45);
+  color: rgb(231, 175, 110);
 }
 
 /* Wizard shell */

@@ -30,7 +30,6 @@ import {
   Row,
   Space,
   Steps,
-  Tabs,
   Tag,
   Typography,
 } from "antd";
@@ -818,27 +817,17 @@ export default function Home() {
     .filter((i) => i.status === "done" && i.b64)
     .map((i) => ({ name: i.name, description: i.description, b64: i.b64! }));
 
-  const anyEngaged = customers.some(
-    (c) => c.gender || c.selected.length > 0 || c.file || c.job,
-  );
-
-  const tabItems = customers.map((c) => ({
-    key: c.id,
-    label: <CustomerTabLabel customer={c} />,
-    closable: customers.length > 1,
-  }));
-
   return (
     <Space direction="vertical" size={24} style={{ width: "100%" }}>
-      {!anyEngaged && (
-        <div className="kiosk-intro">
-          <span className="kiosk-intro-label">Today at the chair</span>
-          <span className="kiosk-intro-text">
-            Pick a chair, choose a few looks, take a photo. Your stylist talks
-            you through the rest.
-          </span>
-        </div>
-      )}
+      {/* Always render — previously this unmounted on first engagement,
+          which jumped everything below up and read as a flick on mobile. */}
+      <div className="kiosk-intro">
+        <span className="kiosk-intro-label">Today at the chair</span>
+        <span className="kiosk-intro-text">
+          Pick a chair, choose a few looks, take a photo. Your stylist talks
+          you through the rest.
+        </span>
+      </div>
 
       {IS_SHOWCASE && status?.configured === false && (
         <Alert
@@ -934,24 +923,51 @@ export default function Home() {
         />
       )}
 
+      {/* Custom tab strip — AntD's editable-card Tabs runs measurement JS on
+          every layout change and visibly twitched on mobile when the active
+          customer's badge width changed. Plain buttons stay still. */}
       <div className="customer-bar">
-        <Tabs
-          type="editable-card"
-          activeKey={activeId}
-          onChange={setActiveId}
-          onEdit={(targetKey, action) => {
-            if (action === "add") addCustomer();
-            else if (action === "remove") removeCustomer(targetKey as string);
-          }}
-          addIcon={
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <PlusOutlined /> New customer
-            </span>
-          }
-          items={tabItems}
-          hideAdd={false}
-          tabBarStyle={{ marginBottom: 0 }}
-        />
+        <div className="customer-bar-row">
+          {customers.map((c) => {
+            const isActive = c.id === activeId;
+            return (
+              <div
+                key={c.id}
+                className={`customer-tab ${isActive ? "is-active" : ""}`}
+              >
+                <button
+                  type="button"
+                  className="customer-tab-main"
+                  onClick={() => setActiveId(c.id)}
+                  aria-pressed={isActive}
+                >
+                  <CustomerTabLabel customer={c} />
+                </button>
+                {customers.length > 1 && (
+                  <button
+                    type="button"
+                    className="customer-tab-close"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeCustomer(c.id);
+                    }}
+                    aria-label={`Remove ${c.name}`}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            );
+          })}
+          <button
+            type="button"
+            className="customer-tab-add"
+            onClick={addCustomer}
+          >
+            <PlusOutlined />
+            <span>New customer</span>
+          </button>
+        </div>
       </div>
 
       {ac && (
@@ -1130,38 +1146,38 @@ function CustomerTabLabel({ customer }: { customer: Customer }) {
   const failed = customer.job?.items.filter((i) => i.status === "failed").length ?? 0;
   const inFlight = total - done - failed;
 
-  let badge: React.ReactNode = null;
+  let badgeText: string | null = null;
+  let badgeTone: "info" | "warn" | "ok" | "neutral" = "neutral";
   if (total > 0) {
     if (inFlight > 0) {
-      badge = (
-        <Tag color="processing" style={{ marginRight: 0 }}>
-          {done}/{total}
-        </Tag>
-      );
+      badgeText = `${done}/${total}`;
+      badgeTone = "info";
     } else if (failed > 0) {
-      badge = (
-        <Tag color="warning" style={{ marginRight: 0 }}>
-          {done}/{total}
-        </Tag>
-      );
+      badgeText = `${done}/${total}`;
+      badgeTone = "warn";
     } else {
-      badge = (
-        <Tag color="success" style={{ marginRight: 0 }}>
-          Ready
-        </Tag>
-      );
+      badgeText = "Ready";
+      badgeTone = "ok";
     }
   } else if (customer.gender || customer.selected.length > 0 || customer.file) {
-    badge = (
-      <Tag style={{ marginRight: 0 }}>Step {Math.min(customer.step + 1, 3)}/3</Tag>
-    );
+    badgeText = `Step ${Math.min(customer.step + 1, 3)}/3`;
+    badgeTone = "neutral";
   }
 
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+    <span className="customer-tab-label">
       <UserOutlined />
       <span>{customer.name}</span>
-      {badge}
+      {/* Plain span instead of <Tag> — AntD Tag injects CSS-in-JS on first
+          mount, which caused a reflow flick on the kiosk when the badge
+          appeared right after gender selection. */}
+      <span
+        className={`customer-tab-badge tone-${badgeTone}`}
+        data-empty={badgeText ? "false" : "true"}
+        aria-hidden={!badgeText}
+      >
+        {badgeText ?? ""}
+      </span>
     </span>
   );
 }
@@ -1183,9 +1199,9 @@ function StepWho({
       <Paragraph type="secondary" style={{ marginTop: 0 }}>
         Pick one to load the matching style menu.
       </Paragraph>
-      <Row gutter={[16, 16]}>
+      <Row gutter={[12, 12]}>
         {GENDERS.map((g) => (
-          <Col xs={24} sm={8} key={g.id}>
+          <Col xs={12} sm={8} key={g.id}>
             <PhotoCard
               imageUrl={status?.categoryImages?.[g.id]}
               fallbackEmoji={g.emoji}

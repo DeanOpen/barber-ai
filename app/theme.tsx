@@ -31,13 +31,15 @@ export function useThemeMode(): ThemeCtx {
 }
 
 function readStoredChoice(): Choice {
-  if (typeof window === "undefined") return "system";
+  if (typeof window === "undefined") return "light";
   const v = window.localStorage.getItem(STORAGE_KEY);
-  return v === "light" || v === "dark" || v === "system" ? v : "system";
+  return v === "light" || v === "dark" || v === "system" ? v : "light";
 }
 
+// Default theme is light. "system" still respects the OS preference if the
+// visitor explicitly opts in via the toggle.
 function systemPrefers(): Mode {
-  if (typeof window === "undefined") return "dark";
+  if (typeof window === "undefined") return "light";
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
@@ -65,22 +67,31 @@ const PALETTE = {
 const COBALT = "#2f7fbf";
 const COBALT_LIGHT = "#1f5f95";
 
+// Read whatever the boot script in app/layout.tsx already wrote onto <html> so
+// React's first render matches the DOM instead of falling back to "dark" and
+// flipping after useEffect — that flip is what made the kiosk flicker on click.
+function readBootedMode(): Mode {
+  if (typeof document === "undefined") return "light";
+  const t = document.documentElement.dataset.theme;
+  return t === "dark" ? "dark" : "light";
+}
+
 export default function ThemeProvider({ children }: { children: ReactNode }) {
-  const [choice, setChoiceState] = useState<Choice>("system");
-  const [resolved, setResolved] = useState<Mode>("dark");
+  const [choice, setChoiceState] = useState<Choice>("light");
+  const [resolved, setResolved] = useState<Mode>(readBootedMode);
 
   useEffect(() => {
     const stored = readStoredChoice();
     setChoiceState(stored);
     const next: Mode = stored === "system" ? systemPrefers() : stored;
-    setResolved(next);
+    setResolved((prev) => (prev === next ? prev : next));
     applyDocumentTheme(next);
 
     const mql = window.matchMedia("(prefers-color-scheme: dark)");
     const onSystem = () => {
       if (readStoredChoice() !== "system") return;
       const r = systemPrefers();
-      setResolved(r);
+      setResolved((prev) => (prev === r ? prev : r));
       applyDocumentTheme(r);
     };
     mql.addEventListener?.("change", onSystem);
@@ -92,7 +103,7 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
     if (m === "system") window.localStorage.removeItem(STORAGE_KEY);
     else window.localStorage.setItem(STORAGE_KEY, m);
     const r: Mode = m === "system" ? systemPrefers() : m;
-    setResolved(r);
+    setResolved((prev) => (prev === r ? prev : r));
     applyDocumentTheme(r);
   };
 
@@ -101,28 +112,32 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
     [choice, resolved],
   );
 
-  const palette = PALETTE[resolved];
-  const primary = resolved === "dark" ? COBALT : COBALT_LIGHT;
+  // Memoize the AntD theme config — without this the literal is a fresh object
+  // on every parent render, which makes ConfigProvider recompute tokens and
+  // briefly re-paint AntD components on every state change (style/gender pick).
+  const themeConfig = useMemo(() => {
+    const palette = PALETTE[resolved];
+    const primary = resolved === "dark" ? COBALT : COBALT_LIGHT;
+    return {
+      algorithm:
+        resolved === "dark" ? theme.darkAlgorithm : theme.defaultAlgorithm,
+      token: {
+        colorPrimary: primary,
+        colorInfo: primary,
+        colorBgBase: palette.bgBase,
+        colorBgContainer: palette.bgContainer,
+        colorBgElevated: palette.bgElevated,
+        colorBorder: palette.border,
+        borderRadius: 10,
+        fontFamily:
+          'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+      },
+    };
+  }, [resolved]);
 
   return (
     <AntdRegistry>
-      <ConfigProvider
-        theme={{
-          algorithm:
-            resolved === "dark" ? theme.darkAlgorithm : theme.defaultAlgorithm,
-          token: {
-            colorPrimary: primary,
-            colorInfo: primary,
-            colorBgBase: palette.bgBase,
-            colorBgContainer: palette.bgContainer,
-            colorBgElevated: palette.bgElevated,
-            colorBorder: palette.border,
-            borderRadius: 10,
-            fontFamily:
-              'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
-          },
-        }}
-      >
+      <ConfigProvider theme={themeConfig}>
         <Ctx.Provider value={ctx}>
           <AntdApp>{children}</AntdApp>
         </Ctx.Provider>
