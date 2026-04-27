@@ -4,10 +4,8 @@ import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
   CheckCircleFilled,
-  ClockCircleOutlined,
   CloseCircleFilled,
   DownloadOutlined,
-  HeartOutlined,
   HistoryOutlined,
   LoadingOutlined,
   PlayCircleOutlined,
@@ -833,37 +831,13 @@ export default function Home() {
   return (
     <Space direction="vertical" size={24} style={{ width: "100%" }}>
       {!anyEngaged && (
-        <section className="hero-card">
-          <Space direction="vertical" size={14} style={{ width: "100%" }}>
-            <span className="step-pill">
-              <ScissorOutlined /> Hairstyle preview station
-            </span>
-            <Title level={1} style={{ margin: 0, fontSize: 36, lineHeight: 1.15 }}>
-              See the cut before the chair.
-            </Title>
-            <Paragraph type="secondary" style={{ margin: 0, maxWidth: 640 }}>
-              Snap a photo, pick a few looks, and we&apos;ll sketch them on your face for the stylist
-              to match. Great for consultations, big changes, and kids who can&apos;t make up their minds.
-            </Paragraph>
-            <div className="feature-row">
-              <Feature
-                icon={<ClockCircleOutlined />}
-                title="A quick preview"
-                body="Have a few options ready by the time you&rsquo;re seated."
-              />
-              <Feature
-                icon={<HeartOutlined />}
-                title="Your face, new hair"
-                body="We keep your face just as it is. Only the hair changes."
-              />
-              <Feature
-                icon={<ScissorOutlined />}
-                title="Easy to talk through"
-                body="Each option has a name - point and your stylist will know."
-              />
-            </div>
-          </Space>
-        </section>
+        <div className="kiosk-intro">
+          <span className="kiosk-intro-label">Today at the chair</span>
+          <span className="kiosk-intro-text">
+            Pick a chair, choose a few looks, take a photo. Your stylist talks
+            you through the rest.
+          </span>
+        </div>
       )}
 
       {IS_SHOWCASE && status?.configured === false && (
@@ -1203,12 +1177,11 @@ function StepWho({
 }) {
   return (
     <section>
-      <span className="section-eyebrow">Step 1</span>
-      <Title level={3} style={{ margin: "6px 0 4px" }}>
-        Who&apos;s sitting in the chair?
+      <Title level={3} style={{ margin: "0 0 4px" }}>
+        Who&apos;s in the chair?
       </Title>
       <Paragraph type="secondary" style={{ marginTop: 0 }}>
-        Pick a chair - it shapes the hairstyles we&apos;ll suggest.
+        Pick one to load the matching style menu.
       </Paragraph>
       <Row gutter={[16, 16]}>
         {GENDERS.map((g) => (
@@ -1247,9 +1220,8 @@ function StepStyles({
   if (styleOptions.length === 0) {
     return (
       <section>
-        <span className="section-eyebrow">Step 2</span>
-        <Title level={3} style={{ margin: "6px 0 4px" }}>
-          Pick the looks you want
+        <Title level={3} style={{ margin: "0 0 4px" }}>
+          Pick the looks
         </Title>
         <Alert
           type="info"
@@ -1280,14 +1252,13 @@ function StepStyles({
 
   return (
     <section>
-      <span className="section-eyebrow">Step 2</span>
-      <Title level={3} style={{ margin: "6px 0 4px" }}>
-        Pick the looks you want
+      <Title level={3} style={{ margin: "0 0 4px" }}>
+        Pick the looks
       </Title>
       <Paragraph type="secondary" style={{ marginTop: 0 }}>
         {mode === "grid"
-          ? `Pick up to ${maxPicks} hairstyles - we'll render them all on a single side-by-side lookbook, then you can choose 1–2 favorites for full detail.`
-          : `Choose up to ${maxPicks} hairstyles - we'll preview every one you tick.`}{" "}
+          ? `Up to ${maxPicks}. They render on one lookbook; pick a favorite later for full detail.`
+          : `Up to ${maxPicks}. Each tick gets its own preview.`}{" "}
         <Tag color="gold" style={{ marginLeft: 4 }}>
           {customer.selected.length} selected
         </Tag>
@@ -1403,12 +1374,11 @@ function StepFace({
 }) {
   return (
     <section>
-      <span className="section-eyebrow">Step 3</span>
-      <Title level={3} style={{ margin: "6px 0 4px" }}>
-        A clear photo of the client
+      <Title level={3} style={{ margin: "0 0 4px" }}>
+        Photo of the client
       </Title>
       <Paragraph type="secondary" style={{ marginTop: 0 }}>
-        Use the tablet camera or upload a photo. Face the camera, even lighting works best.
+        Camera or upload. Face on, even lighting.
       </Paragraph>
       <Card>
         <Row gutter={[24, 24]} align="middle">
@@ -1476,7 +1446,6 @@ function StepLookbook({
 
   return (
     <section>
-      <span className="section-eyebrow">Step 4</span>
       <div
         style={{
           display: "flex",
@@ -1484,7 +1453,7 @@ function StepLookbook({
           justifyContent: "space-between",
           gap: 12,
           flexWrap: "wrap",
-          margin: "6px 0 4px",
+          margin: "0 0 4px",
         }}
       >
         <Title level={3} style={{ margin: 0 }}>
@@ -1813,20 +1782,3 @@ function StatusIcon({ status }: { status: ItemStatus }) {
   return <LoadingOutlined style={{ color: "#f5b400", fontSize: 18 }} spin />;
 }
 
-function Feature({
-  icon,
-  title,
-  body,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-}) {
-  return (
-    <div className="feature-tile">
-      <div className="icon">{icon}</div>
-      <div style={{ fontWeight: 600 }}>{title}</div>
-      <div style={{ color: "var(--muted)", fontSize: 13, marginTop: 2 }}>{body}</div>
-    </div>
-  );
-}

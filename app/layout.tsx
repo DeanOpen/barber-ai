@@ -2,7 +2,12 @@ import "./globals.css";
 import type { Metadata } from "next";
 import Link from "next/link";
 import ThemeProvider from "./theme";
+import ThemeToggle from "./components/ThemeToggle";
 import { IS_SHOWCASE } from "@/lib/showcase";
+
+// Runs before React hydrates so the first paint matches the saved (or system)
+// theme — prevents a dark/light flash.
+const THEME_BOOT = `(function(){try{var k='barber-theme';var v=localStorage.getItem(k);var m=(v==='light'||v==='dark')?v:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');var d=document.documentElement;d.dataset.theme=m;d.style.colorScheme=m;}catch(e){}})();`;
 
 const SITE_TITLE = IS_SHOWCASE
   ? "Barber Studio - Public Demo"
@@ -30,53 +35,46 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
       <body>
         <ThemeProvider>
           <header className="shop-header">
             <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
               <Link href="/" className="brand-mark">
                 <span className="stripe" aria-hidden />
-                <span>
-                  <span style={{ color: "var(--accent)" }}>Barber</span> Studio
-                  {IS_SHOWCASE ? (
-                    <span
-                      style={{
-                        marginLeft: 8,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        letterSpacing: 0.4,
-                        textTransform: "uppercase",
-                        padding: "2px 6px",
-                        borderRadius: 999,
-                        border: "1px solid rgba(245, 158, 11, 0.4)",
-                        color: "var(--accent)",
-                      }}
-                    >
-                      Public demo
-                    </span>
-                  ) : null}
+                <span className="brand-wordmark">
+                  <span className="brand-name">Barber Studio</span>
+                  <span className="brand-sub">Chair-side preview</span>
                 </span>
+                {IS_SHOWCASE ? (
+                  <span className="brand-chip">Demo</span>
+                ) : null}
               </Link>
-              {IS_SHOWCASE ? (
-                <span
-                  className="text-sm"
-                  style={{ color: "var(--muted)" }}
-                  aria-label="Bring your own key - runs entirely in your browser"
-                >
-                  BYOK · Browser-only
-                </span>
-              ) : (
-                <nav className="text-sm" style={{ color: "var(--muted)" }}>
-                  <Link href="/admin" className="hover:text-white">
-                    Shop admin
-                  </Link>
-                </nav>
-              )}
+              <div className="flex items-center gap-3">
+                {IS_SHOWCASE ? (
+                  <span
+                    className="text-sm"
+                    style={{ color: "var(--muted)" }}
+                    aria-label="Bring your own key - runs entirely in your browser"
+                  >
+                    BYOK · Browser-only
+                  </span>
+                ) : (
+                  <nav className="text-sm">
+                    <Link href="/admin" className="nav-link">
+                      Shop admin
+                    </Link>
+                  </nav>
+                )}
+                <ThemeToggle />
+              </div>
             </div>
           </header>
           <main className="mx-auto max-w-6xl px-6 py-10">{children}</main>
           <footer
-            className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-6 py-10 text-xs"
+            className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-10 text-xs"
             style={{ color: "var(--muted)" }}
           >
             <span>
@@ -84,15 +82,30 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 ? "Public demo. Your API key and photo never leave your browser - generation calls go directly from this page to the model provider you chose."
                 : "For in-shop styling consultations. Your photo is used only to sketch the previews and is not saved on this tablet."}
             </span>
-            <a
-              href="https://github.com/DeanOpen/barber-ai"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="hover:text-white"
-              style={{ color: "var(--muted)" }}
-            >
-              github.com/DeanOpen/barber-ai
-            </a>
+            <span className="flex flex-wrap items-center gap-3">
+              <a
+                href="https://www.producthunt.com/products/barber-studio-try-the-haircut?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-barber-studio-try-the-haircut"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Barber Studio on Product Hunt"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  alt="Barber Studio - Try the haircut - An in-shop AI hairstyle preview for barbers and salons. | Product Hunt"
+                  width={250}
+                  height={54}
+                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1132893&theme=light&t=1777256507518"
+                />
+              </a>
+              <a
+                href="https://github.com/DeanOpen/barber-ai"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="nav-link"
+              >
+                github.com/DeanOpen/barber-ai
+              </a>
+            </span>
           </footer>
         </ThemeProvider>
       </body>

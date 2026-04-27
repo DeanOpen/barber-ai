@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     ...incoming,
     prompts: { ...current.prompts, ...(incoming.prompts || {}) },
   };
-  merged.imageCount = Math.min(6, Math.max(1, Number(merged.imageCount) || 4));
+  merged.imageCount = Math.min(12, Math.max(1, Number(merged.imageCount) || 4));
   if (!merged.adminPassword) merged.adminPassword = current.adminPassword;
   await saveSettings(merged);
   return NextResponse.json({ ok: true });

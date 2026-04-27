@@ -360,7 +360,7 @@ Do not describe this as enterprise auth. If public exposure increases, add stron
 `Dockerfile`:
 
 - installs with Yarn,
-- runs `yarn build`, which performs the Next.js build and OpenNext Cloudflare build,
+- runs `yarn build:next`, which produces the standalone Next.js server used by the Docker image,
 - copies `.next/standalone`, `.next/static`, and `public`,
 - runs as non-root `nextjs`,
 - declares `/app/data` as a volume,

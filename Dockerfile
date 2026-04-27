@@ -6,7 +6,8 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat
 RUN corepack enable
 COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn ./.yarn
+# Yarn is pinned by packageManager and downloaded by Corepack; this repo does
+# not commit a zero-install .yarn directory.
 RUN --mount=type=cache,target=/root/.yarn \
     yarn install --immutable
 
@@ -21,7 +22,7 @@ ARG NEXT_PUBLIC_SHOWCASE=
 ENV NEXT_PUBLIC_SHOWCASE=${NEXT_PUBLIC_SHOWCASE}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN corepack enable && yarn build
+RUN corepack enable && yarn build:next
 
 # ---------- runtime ----------
 FROM node:20-alpine AS runtime

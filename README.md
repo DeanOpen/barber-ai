@@ -1,8 +1,8 @@
 # Barber Studio
 
-<p align="center">
-  <img src="public/screenshots/social-thumbnail.png" alt="Barber Studio — in-shop AI hairstyle preview station" width="640" />
-</p>
+![Barber Studio — in-shop AI hairstyle preview station](public/screenshots/social-thumbnail.png)
+
+[![Barber Studio - Try the haircut - An in-shop AI hairstyle preview for barbers and salons. | Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1132893&theme=light&t=1777256507518)](https://www.producthunt.com/products/barber-studio-try-the-haircut?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-barber-studio-try-the-haircut)
 
 Barber Studio is an in-shop AI hairstyle preview station for barbers and salons. Staff use it during consultation: pick a customer type, select hairstyles from the shop catalog, capture or upload a face photo, and generate previews before the cut starts.
 

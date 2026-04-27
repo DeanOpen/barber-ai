@@ -11,6 +11,7 @@ out
 
 # Deps (rebuilt inside the image)
 node_modules
+.yarn
 
 # Runtime data (mounted as a volume at runtime)
 data
