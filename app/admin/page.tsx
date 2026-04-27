@@ -37,6 +37,7 @@ import {
 } from "antd";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { HOST_PRESETS, MODEL_PRESETS } from "@/lib/model-presets";
 import { IS_SHOWCASE } from "@/lib/showcase";
 
 type Gender = "man" | "woman" | "kid";
@@ -366,30 +367,7 @@ export default function AdminPage() {
                   >
                     <AutoComplete
                       placeholder="https://api.openai.com/v1"
-                      options={[
-                        {
-                          label: "Hosted providers",
-                          options: [
-                            { value: "https://api.openai.com/v1", label: "OpenAI - https://api.openai.com/v1" },
-                            { value: "https://openrouter.ai/api/v1", label: "OpenRouter - https://openrouter.ai/api/v1" },
-                            { value: "https://api.together.xyz/v1", label: "Together AI - https://api.together.xyz/v1" },
-                            { value: "https://api.groq.com/openai/v1", label: "Groq - https://api.groq.com/openai/v1" },
-                            { value: "https://api.fireworks.ai/inference/v1", label: "Fireworks AI - https://api.fireworks.ai/inference/v1" },
-                            { value: "https://api.deepinfra.com/v1/openai", label: "DeepInfra - https://api.deepinfra.com/v1/openai" },
-                            { value: "https://api.x.ai/v1", label: "xAI - https://api.x.ai/v1" },
-                            { value: "https://api.deepseek.com/v1", label: "DeepSeek - https://api.deepseek.com/v1" },
-                            { value: "https://generativelanguage.googleapis.com/v1beta/openai", label: "Google AI Studio - generativelanguage.googleapis.com/v1beta/openai" },
-                          ],
-                        },
-                        {
-                          label: "Local",
-                          options: [
-                            { value: "http://localhost:11434/v1", label: "Ollama - http://localhost:11434/v1" },
-                            { value: "http://localhost:1234/v1", label: "LM Studio - http://localhost:1234/v1" },
-                            { value: "http://localhost:8080/v1", label: "llama.cpp / vLLM - http://localhost:8080/v1" },
-                          ],
-                        },
-                      ]}
+                      options={HOST_PRESETS}
                       filterOption={(input, option) => {
                         const value = (option as { value?: string } | undefined)?.value;
                         return typeof value === "string"
@@ -406,26 +384,8 @@ export default function AdminPage() {
                     rules={[{ required: true, message: "Model is required" }]}
                   >
                     <AutoComplete
-                      placeholder="gpt-image-1"
-                      options={[
-                        {
-                          label: "OpenAI",
-                          options: [
-                            { value: "gpt-image-2", label: "gpt-image-2 (OpenAI)" },
-                            { value: "gpt-image-1", label: "gpt-image-1 (OpenAI)" },
-                          ],
-                        },
-                        {
-                          label: "OpenRouter",
-                          options: [
-                            { value: "openai/gpt-5.4-image-2", label: "openai/gpt-5.4-image-2 (OpenRouter)" },
-                            { value: "openai/gpt-image-1", label: "openai/gpt-image-1 (OpenRouter)" },
-                            { value: "google/gemini-2.5-flash-image", label: "google/gemini-2.5-flash-image (OpenRouter)" },
-                            { value: "google/gemini-2.5-flash-image-preview", label: "google/gemini-2.5-flash-image-preview (OpenRouter)" },
-                            { value: "black-forest-labs/flux-1.1-pro", label: "black-forest-labs/flux-1.1-pro (OpenRouter)" },
-                          ],
-                        },
-                      ]}
+                      placeholder="openai/gpt-5-image"
+                      options={MODEL_PRESETS}
                       filterOption={(input, option) => {
                         const value = (option as { value?: string } | undefined)?.value;
                         return typeof value === "string"
@@ -1105,4 +1065,3 @@ function HistoryDetail({ entry }: { entry: HistoryEntry }) {
     </Space>
   );
 }
-

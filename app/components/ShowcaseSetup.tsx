@@ -15,6 +15,7 @@ import {
 } from "antd";
 import { useEffect } from "react";
 import type { ClientByokConfig } from "@/lib/client-generate";
+import { HOST_PRESETS, MODEL_PRESETS } from "@/lib/model-presets";
 
 const { Paragraph, Text } = Typography;
 
@@ -112,39 +113,6 @@ function mergeConfig(p: Partial<ClientByokConfig>): ClientByokConfig {
     },
   };
 }
-
-const HOST_PRESETS = [
-  {
-    label: "Hosted providers",
-    options: [
-      { value: "https://openrouter.ai/api/v1", label: "OpenRouter (recommended) - https://openrouter.ai/api/v1" },
-      { value: "https://api.openai.com/v1", label: "OpenAI - https://api.openai.com/v1" },
-      { value: "https://api.together.xyz/v1", label: "Together AI - https://api.together.xyz/v1" },
-      { value: "https://api.fireworks.ai/inference/v1", label: "Fireworks AI - https://api.fireworks.ai/inference/v1" },
-    ],
-  },
-];
-
-const MODEL_PRESETS = [
-  {
-    label: "OpenRouter (recommended - set base URL to https://openrouter.ai/api/v1)",
-    options: [
-      { value: "openai/gpt-5.4-image-2", label: "openai/gpt-5.4-image-2 (recommended)" },
-      { value: "openai/gpt-image-2", label: "openai/gpt-image-2" },
-      { value: "openai/gpt-image-1", label: "openai/gpt-image-1" },
-      { value: "google/gemini-2.5-flash-image", label: "google/gemini-2.5-flash-image" },
-      { value: "google/gemini-2.5-flash-image-preview", label: "google/gemini-2.5-flash-image-preview" },
-      { value: "black-forest-labs/flux-1.1-pro", label: "black-forest-labs/flux-1.1-pro" },
-    ],
-  },
-  {
-    label: "OpenAI (default base URL)",
-    options: [
-      { value: "gpt-image-2", label: "gpt-image-2 (default)" },
-      { value: "gpt-image-1", label: "gpt-image-1" },
-    ],
-  },
-];
 
 type Props = {
   open: boolean;

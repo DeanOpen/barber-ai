@@ -32,10 +32,72 @@ export type ShowcaseHistoryEntry = {
 
 export const SHOWCASE_HISTORY_KEY = "barber.showcase.history.v1";
 
-// Cap before we even hit a quota error. Each individual-mode entry can be
-// 4-6MB of base64 image data, so anything above ~12 will reliably blow past
-// the typical 5-10MB localStorage budget.
+// Cap before we even hit a quota error. With image compression (see below)
+// each entry shrinks from multi-MB to ~100-300KB so we can comfortably keep
+// the most recent 12 inside the typical 5-10MB localStorage budget.
 const MAX_ENTRIES = 12;
+
+// Compression targets for stored thumbnails. Output is JPEG so we get an
+// order-of-magnitude size reduction over the model's PNG output while still
+// looking good in the History drawer and the Slideshow preview.
+const THUMB_MAX_EDGE = 1024;
+const THUMB_QUALITY = 0.82;
+const INPUT_MAX_EDGE = 768;
+const INPUT_QUALITY = 0.8;
+// Skip compression for already-small data URLs (cheap fast path).
+const COMPRESS_THRESHOLD = 60_000;
+
+async function compressDataUrl(
+  dataUrl: string | null | undefined,
+  maxEdge: number,
+  quality: number,
+): Promise<string | null | undefined> {
+  if (!dataUrl) return dataUrl ?? null;
+  if (typeof window === "undefined") return dataUrl;
+  if (dataUrl.length < COMPRESS_THRESHOLD) return dataUrl;
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("image decode failed"));
+      el.src = dataUrl;
+    });
+    const longest = Math.max(img.width, img.height) || maxEdge;
+    const scale = longest > maxEdge ? maxEdge / longest : 1;
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return dataUrl;
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL("image/jpeg", quality);
+  } catch {
+    return dataUrl;
+  }
+}
+
+// Compress every image attached to a showcase entry. Returns a fresh entry
+// so the caller doesn't mutate React state in place.
+export async function compressShowcaseEntry(
+  entry: ShowcaseHistoryEntry,
+): Promise<ShowcaseHistoryEntry> {
+  const [inputCompressed, ...itemBlobs] = await Promise.all([
+    compressDataUrl(entry.inputDataUrl, INPUT_MAX_EDGE, INPUT_QUALITY),
+    ...entry.items.map((it) =>
+      compressDataUrl(it.b64, THUMB_MAX_EDGE, THUMB_QUALITY),
+    ),
+  ]);
+  return {
+    ...entry,
+    inputDataUrl: inputCompressed ?? null,
+    items: entry.items.map((it, idx) => ({
+      ...it,
+      b64: itemBlobs[idx] ?? it.b64 ?? null,
+    })),
+  };
+}
 
 export function readShowcaseHistory(): ShowcaseHistoryEntry[] {
   if (typeof window === "undefined") return [];

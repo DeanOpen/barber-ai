@@ -52,6 +52,7 @@ import {
   type ClientItem,
 } from "@/lib/client-generate";
 import {
+  compressShowcaseEntry,
   entrySignature,
   readShowcaseHistory,
   upsertShowcaseHistory,
@@ -448,7 +449,8 @@ export default function Home() {
   // ref to avoid re-running when our own setHistory call lands.
   useEffect(() => {
     if (!IS_SHOWCASE) return;
-    let nextHistory: ShowcaseHistoryEntry[] | null = null;
+    let cancelled = false;
+    const pending: ShowcaseHistoryEntry[] = [];
     for (const c of customers) {
       const job = c.job;
       if (!job?.done) continue;
@@ -474,9 +476,24 @@ export default function Home() {
       const sig = entrySignature(entry);
       if (savedSignatureRef.current.get(job.id) === sig) continue;
       savedSignatureRef.current.set(job.id, sig);
-      nextHistory = upsertShowcaseHistory(entry);
+      pending.push(entry);
     }
-    if (nextHistory) setHistory(nextHistory);
+    if (pending.length === 0) return;
+    // Compress each entry's images before persisting — without this the
+    // 4-6MB raw PNGs blow past localStorage quota and only one entry ever
+    // sticks. Compression runs off the React render path.
+    (async () => {
+      let next: ShowcaseHistoryEntry[] | null = null;
+      for (const entry of pending) {
+        const compressed = await compressShowcaseEntry(entry);
+        if (cancelled) return;
+        next = upsertShowcaseHistory(compressed);
+      }
+      if (!cancelled && next) setHistory(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [customers]);
 
   const styleOptions: Hairstyle[] = useMemo(() => {
