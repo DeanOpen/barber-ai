@@ -211,10 +211,20 @@ body {
   padding: 0;
   color: inherit;
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.photo-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(212, 162, 76, 0.5);
+@media (hover: hover) and (pointer: fine) {
+  .photo-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(212, 162, 76, 0.5);
+  }
+}
+.photo-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .photo-card.is-selected {
   border-color: var(--accent);
