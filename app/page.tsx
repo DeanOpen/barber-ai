@@ -26,6 +26,7 @@ import {
   Card,
   Col,
   Image,
+  Progress,
   Row,
   Space,
   Steps,
@@ -113,6 +114,10 @@ type StoredCustomer = { id: string; name: string; jobId: string };
 const MAX_PICKS_INDIVIDUAL = 6;
 const MAX_PICKS_GRID = 12;
 const MAX_DETAILS = 4;
+// Wall-clock estimate per image. The provider call is opaque - we can't poll
+// real progress, so we drive a determinate bar from this number and flip the
+// label once we cross it instead of letting the bar pin at 100%.
+const EXPECTED_RENDER_MS = 260_000;
 const STEP_LABELS = ["Who", "Styles", "Face", "Lookbook"];
 const CUSTOMERS_KEY = "barber.customers.v2";
 
@@ -1603,6 +1608,32 @@ function LookbookCard({
   onPresent: () => void;
 }) {
   const aspect = wide ? "3 / 2" : "1 / 1";
+
+  // Anchor a start timestamp the moment this card observes "running" and tick
+  // every second so the determinate Progress bar advances. Reset on any
+  // non-running status so retries restart the estimate cleanly.
+  const startedAtRef = useRef<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (item.status === "running") {
+      if (startedAtRef.current === null) {
+        startedAtRef.current = Date.now();
+        setNow(Date.now());
+      }
+      const id = setInterval(() => setNow(Date.now()), 1000);
+      return () => clearInterval(id);
+    }
+    startedAtRef.current = null;
+  }, [item.status]);
+
+  const elapsedMs =
+    item.status === "running" && startedAtRef.current !== null
+      ? Math.max(0, now - startedAtRef.current)
+      : 0;
+  const overTime = elapsedMs > EXPECTED_RENDER_MS;
+  // Cap below 100 so we never imply completion before the image actually lands.
+  const percent = Math.min(95, Math.round((elapsedMs / EXPECTED_RENDER_MS) * 100));
+
   const cover = (() => {
     if (item.status === "done" && item.b64) {
       return (
@@ -1636,6 +1667,12 @@ function LookbookCard({
         </div>
       );
     }
+    const isPending = item.status === "pending";
+    const label = isPending
+      ? "Queued…"
+      : overTime
+        ? "A little longer expected"
+        : "Sketching…";
     return (
       <div
         style={{
@@ -1647,12 +1684,23 @@ function LookbookCard({
           gap: 10,
           background: "#0f0f12",
           color: "rgba(255,255,255,0.6)",
+          padding: 16,
         }}
       >
         <LoadingOutlined style={{ fontSize: 28, color: "#f5b400" }} spin />
-        <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>
-          {item.status === "pending" ? "Queued…" : "Sketching…"}
-        </Text>
+        <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>{label}</Text>
+        {!isPending && (
+          <div style={{ width: "min(220px, 80%)" }}>
+            <Progress
+              percent={overTime ? 99 : percent}
+              status="active"
+              showInfo={false}
+              strokeColor={overTime ? "#fa8c16" : "#f5b400"}
+              trailColor="rgba(255,255,255,0.12)"
+              size="small"
+            />
+          </div>
+        )}
       </div>
     );
   })();
