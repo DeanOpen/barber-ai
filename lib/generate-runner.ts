@@ -12,6 +12,13 @@ function buildMensSalonDirection(gender: "man" | "woman" | "child"): string {
 `.trim();
 }
 
+const CUT_FEASIBILITY_GUIDE = `
+[CUT FEASIBILITY GUIDE]
+- Add one very thin cyan outline around the outer edge of the finished hairstyle only, like a subtle salon consultation guide.
+- The outline must follow the hair silhouette closely so a barber can judge whether the cut shape is realistically possible.
+- Keep the outline off the face, neck, clothes, and background. No arrows, no measurements, no labels, no extra text.
+`.trim();
+
 function buildGridPrompt(opts: {
   gender: "man" | "woman" | "child";
   styles: { name: string; description: string }[];
@@ -44,6 +51,8 @@ ${numbered}
 ${mensSalonDirection ? `${mensSalonDirection}\n` : ""}
 Each cell must clearly show its corresponding hairstyle (length, shape, parting, volume, texture). Do not blend old hair with new hair; replace the hairstyle completely in each cell.
 
+${CUT_FEASIBILITY_GUIDE}
+
 [RENDER]
 Studio-quality lighting, sharp focus on every face, consistent neutral seamless background, professional barbershop / salon lookbook layout. No watermark, no extra people, no text other than the hairstyle name labels.
 `.trim();
@@ -73,6 +82,8 @@ Visual description: ${hairstyleDescription}.
 
 ${mensSalonDirection ? `${mensSalonDirection}\n` : ""}
 The final silhouette of the head must clearly show a "${hairstyleName}" - its length, shape, parting, volume, and texture must visibly match the description above, not the original photo.
+
+${CUT_FEASIBILITY_GUIDE}
 
 [RENDER]
 Studio-quality lighting, sharp focus on the face, neutral seamless background, head-and-shoulders framing, natural color grading, professional barbershop / salon portrait photography. No text, no watermark, no extra people.
