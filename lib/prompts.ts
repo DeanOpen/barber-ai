@@ -18,11 +18,12 @@ function buildMensSalonDirection(gender: PromptGender): string {
 `.trim();
 }
 
-const CUT_FEASIBILITY_GUIDE = `
-[CUT FEASIBILITY GUIDE]
-- Add one very thin cyan outline around the outer edge of the finished hairstyle only, like a subtle salon consultation guide.
-- The outline must follow the hair silhouette closely so a barber can judge whether the cut shape is realistically possible.
-- Keep the outline off the face, neck, clothes, and background. No arrows, no measurements, no labels, no extra text.
+const HAIRSTYLE_MATCH_GUIDE = `
+[HAIRSTYLE MATCH GUIDE]
+- The selected haircut must be recognizable at thumbnail size from its silhouette, fringe, parting, fade/taper height, sideburn shape, crown volume, nape/back length, and curl or wave pattern.
+- For fades, tapers, undercuts, mullets, buns, top knots, and mohawks, make the side and nape structure visible from the existing head angle without adding another person or extra view.
+- For perms, curtain styles, crops, fringes, and side parts, make the front texture and parting unmistakable. Avoid generic salon hair if the named style has a specific shape.
+- Do not add colored outlines, labels, arrows, measurement marks, text, or consultation graphics.
 `.trim();
 
 export function buildPrompt(opts: {
@@ -50,7 +51,7 @@ Visual description: ${hairstyleDescription}.
 ${mensSalonDirection ? `${mensSalonDirection}\n` : ""}
 The final silhouette of the head must clearly show a "${hairstyleName}" - its length, shape, parting, volume, and texture must visibly match the description above, not the original photo.
 
-${CUT_FEASIBILITY_GUIDE}
+${HAIRSTYLE_MATCH_GUIDE}
 
 [RENDER]
 Studio-quality lighting, sharp focus on the face, neutral seamless background, head-and-shoulders framing, natural color grading, professional barbershop / salon portrait photography. No text, no watermark, no extra people.
@@ -89,7 +90,7 @@ ${numbered}
 ${mensSalonDirection ? `${mensSalonDirection}\n` : ""}
 Each cell must clearly show its corresponding hairstyle (length, shape, parting, volume, texture). Do not blend old hair with new hair; replace the hairstyle completely in each cell.
 
-${CUT_FEASIBILITY_GUIDE}
+${HAIRSTYLE_MATCH_GUIDE}
 
 [RENDER]
 Studio-quality lighting, sharp focus on every face, consistent neutral seamless background, professional barbershop / salon lookbook layout. No watermark, no extra people, no text other than the hairstyle name labels.
