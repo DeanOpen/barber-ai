@@ -2,7 +2,6 @@
   "name": "barber-ai",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "yarn@4.9.1",
   "scripts": {
     "dev": "next dev",
     "dev:showcase": "NEXT_PUBLIC_SHOWCASE=1 next dev",

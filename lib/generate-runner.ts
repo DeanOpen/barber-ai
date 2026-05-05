@@ -3,11 +3,21 @@ import type { Settings } from "./settings";
 import { getJob, setItemStatus, maybeFinish } from "./jobs";
 import { applyWatermark } from "./watermark";
 
+function buildMensSalonDirection(gender: "man" | "woman" | "child"): string {
+  if (gender !== "man") return "";
+  return `
+[ASIAN/KOREAN MEN'S SALON DIRECTION]
+- Use contemporary Asian/Korean men's salon references for the haircut shape, root volume, texture, and finish whenever the chosen style allows it.
+- This direction applies only to the hair. Preserve the input person's original ethnicity, face, and identity exactly.
+`.trim();
+}
+
 function buildGridPrompt(opts: {
   gender: "man" | "woman" | "child";
   styles: { name: string; description: string }[];
 }): string {
   const { gender, styles } = opts;
+  const mensSalonDirection = buildMensSalonDirection(gender);
   const cols = styles.length <= 4 ? styles.length : styles.length <= 6 ? 3 : 4;
   const rows = Math.ceil(styles.length / cols);
   const numbered = styles
@@ -31,6 +41,7 @@ PHOTOREALISTIC LOOKBOOK COMPOSITE - ${styles.length} variants of the SAME ${gend
 [HAIRSTYLES - ONE PER CELL, IN ORDER]
 ${numbered}
 
+${mensSalonDirection ? `${mensSalonDirection}\n` : ""}
 Each cell must clearly show its corresponding hairstyle (length, shape, parting, volume, texture). Do not blend old hair with new hair; replace the hairstyle completely in each cell.
 
 [RENDER]
@@ -44,6 +55,7 @@ function buildPrompt(opts: {
   hairstyleDescription: string;
 }): string {
   const { gender, hairstyleName, hairstyleDescription } = opts;
+  const mensSalonDirection = buildMensSalonDirection(gender);
   return `
 PHOTOREALISTIC PORTRAIT EDIT - change ONLY the hair, keep the face 100% identical.
 
@@ -59,6 +71,7 @@ Remove the subject's current hairstyle entirely. Do not blend old hair with new 
 New hairstyle name: "${hairstyleName}".
 Visual description: ${hairstyleDescription}.
 
+${mensSalonDirection ? `${mensSalonDirection}\n` : ""}
 The final silhouette of the head must clearly show a "${hairstyleName}" - its length, shape, parting, volume, and texture must visibly match the description above, not the original photo.
 
 [RENDER]
