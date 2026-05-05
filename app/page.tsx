@@ -51,6 +51,7 @@ import {
   type ClientByokConfig,
   type ClientItem,
 } from "@/lib/client-generate";
+import { resolveGridShape } from "@/lib/prompts";
 import {
   compressShowcaseEntry,
   entrySignature,
@@ -1524,6 +1525,7 @@ function StepLookbook({
               }}
             />
           </Image.PreviewGroup>
+          {picks.length > 0 && <GridStyleMap styles={picks} />}
         </div>
       )}
 
@@ -1633,6 +1635,24 @@ function ConnectionTag({ state }: { state: ConnState }) {
   if (state === "connecting") return <Tag color="processing">Connecting…</Tag>;
   if (state === "reconnecting") return <Tag color="warning">Reconnecting…</Tag>;
   return <Tag color="error">Offline</Tag>;
+}
+
+function GridStyleMap({ styles }: { styles: { name: string }[] }) {
+  const { cols } = resolveGridShape(styles.length);
+  return (
+    <div
+      className="grid-style-map"
+      style={{ gridTemplateColumns: `repeat(${cols}, minmax(140px, 1fr))` }}
+      aria-label="Grid style order"
+    >
+      {styles.map((style, i) => (
+        <div className="grid-style-chip" key={`${style.name}-${i}`}>
+          <span className="grid-style-index">{i + 1}</span>
+          <span className="grid-style-name">{style.name}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function LookbookCard({
@@ -1814,4 +1834,3 @@ function StatusIcon({ status }: { status: ItemStatus }) {
     return <CloseCircleFilled style={{ color: "#f5222d", fontSize: 18 }} />;
   return <LoadingOutlined style={{ color: "#f5b400", fontSize: 18 }} spin />;
 }
-

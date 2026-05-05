@@ -2,7 +2,7 @@
 
 import type { Gender, Hairstyle, Watermark, GenerationMode } from "./defaults";
 import { buildPrompt, buildGridPrompt, type PromptGender } from "./prompts";
-import { applyWatermarkClient } from "./client-watermark";
+import { applyGridLabelsClient, applyWatermarkClient } from "./client-watermark";
 
 // Minimal item shape used by the showcase home-page state. Mirrors the server
 // `JobItem` from lib/jobs.ts but lives in the browser only.
@@ -108,8 +108,12 @@ export async function runClientJob(args: RunArgs): Promise<void> {
           preferLandscape: item.kind === "grid",
           signal,
         });
-        const stamped = await applyWatermarkClient(rawB64, config.watermark);
-        onItem(i, { status: "done", b64: stamped, error: undefined });
+        const watermarked = await applyWatermarkClient(rawB64, config.watermark);
+        const finalB64 =
+          item.kind === "grid"
+            ? await applyGridLabelsClient(watermarked, item.gridStyles ?? [])
+            : watermarked;
+        onItem(i, { status: "done", b64: finalB64, error: undefined });
       } catch (err) {
         if (signal?.aborted) {
           onItem(i, { status: "failed", error: "Cancelled", b64: null });
@@ -135,6 +139,18 @@ async function generateOneClient(args: {
 }): Promise<string> {
   const { config, baseURL, prompt, imageBuffer, imageMime, preferLandscape, signal } = args;
   const useChatModalities = config.model.includes("/");
+
+  if (shouldUseSameOriginProviderProxy(baseURL)) {
+    return generateOneViaProxy({
+      config,
+      baseURL,
+      prompt,
+      imageBuffer,
+      imageMime,
+      preferLandscape,
+      signal,
+    });
+  }
 
   if (useChatModalities) {
     const inputDataUrl = `data:${imageMime};base64,${arrayBufferToBase64(imageBuffer)}`;
@@ -172,7 +188,9 @@ async function generateOneClient(args: {
   fd.append("n", "1");
 
   const sizeOverride =
-    preferLandscape && config.size === "auto" ? "1536x1024" : undefined;
+    preferLandscape && (config.size === "auto" || config.size === "1024x1024")
+      ? "1536x1024"
+      : undefined;
   const size = sizeOverride ?? (config.size === "auto" ? undefined : config.size);
   if (size) fd.append("size", size);
   if (config.quality && config.quality !== "auto") fd.append("quality", config.quality);
@@ -187,6 +205,42 @@ async function generateOneClient(args: {
   if (!b64) {
     throw new Error(diagnoseEmptyImageResponse(resp, config.model));
   }
+  return b64;
+}
+
+async function generateOneViaProxy(args: {
+  config: ClientByokConfig;
+  baseURL: string;
+  prompt: string;
+  imageBuffer: ArrayBuffer;
+  imageMime: string;
+  preferLandscape: boolean;
+  signal?: AbortSignal;
+}): Promise<string> {
+  const { config, baseURL, prompt, imageBuffer, imageMime, preferLandscape, signal } = args;
+  const fd = new FormData();
+  fd.append("apiKey", config.apiKey);
+  fd.append("baseURL", baseURL);
+  fd.append("model", config.model);
+  fd.append("prompt", prompt);
+  fd.append("preferLandscape", preferLandscape ? "1" : "0");
+  fd.append(
+    "image",
+    new Blob([imageBuffer], { type: imageMime }),
+    `portrait.${(imageMime.split("/")[1] || "png").replace("jpeg", "jpg")}`,
+  );
+  if (config.size) fd.append("size", config.size);
+  if (config.quality) fd.append("quality", config.quality);
+
+  const resp = await fetch("/api/showcase/generate", {
+    method: "POST",
+    body: fd,
+    signal,
+    credentials: "same-origin",
+  });
+  const parsed = await parseResponse(resp);
+  const b64 = (parsed as { b64?: string })?.b64;
+  if (!b64) throw new Error("Provider returned no image data");
   return b64;
 }
 
@@ -206,6 +260,15 @@ async function fetchJson(
     credentials: "omit",
   });
   return parseResponse(r);
+}
+
+function shouldUseSameOriginProviderProxy(baseURL: string): boolean {
+  try {
+    const url = new URL(baseURL);
+    return url.hostname.toLowerCase() === "api.openai.com";
+  } catch {
+    return false;
+  }
 }
 
 async function fetchForm(

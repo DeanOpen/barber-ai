@@ -6,8 +6,8 @@
 //   - /api/generate and /api/generate/[id]/* are disabled (return 410 Gone)
 //   - /api/status returns public defaults only and never reads data/settings.json
 //   - the home page captures an OpenAI-compatible API key in localStorage and
-//     calls the provider directly from the browser (the key never touches the
-//     server hosting this app)
+//     calls compatible providers from the browser; OpenAI direct calls go
+//     through /api/showcase/generate because OpenAI blocks browser CORS.
 //
 // We use `NEXT_PUBLIC_*` so the value is inlined at build time and the same
 // constant is readable from both server route handlers and browser code.

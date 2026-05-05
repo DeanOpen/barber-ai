@@ -276,9 +276,9 @@ export default function ShowcaseSetup({ open, onClose, initial, onSave }: Props)
         </Space>
 
         <Paragraph type="secondary" style={{ fontSize: 12, marginTop: 6 }}>
-          Some providers may block direct browser calls (CORS). OpenAI, OpenRouter, Together,
-          and Fireworks normally allow them. If you see a network error, try a different
-          provider or run the app on the same origin as the provider proxy.
+          OpenAI blocks direct browser calls, so this app sends OpenAI requests through
+          its same-origin generation proxy. Other compatible hosts may still call
+          directly from the browser.
         </Paragraph>
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>

@@ -11,7 +11,7 @@ function showcaseGate() {
   return NextResponse.json(
     {
       error:
-        "Server-side generation is disabled in this build (PUBLIC_SHOWCASE). The browser calls the model directly with your own key.",
+        "Server-side kiosk generation is disabled in this build (PUBLIC_SHOWCASE). BYOK generation uses the public showcase flow.",
     },
     { status: 410 },
   );
